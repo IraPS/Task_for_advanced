@@ -1,5 +1,7 @@
 import re
 import random
+from urllib import request
+from urllib.parse import quote
 from nltk.corpus import stopwords
 
 
@@ -65,7 +67,15 @@ def make_hints(t, indices):
     return hints_sorted
 
 
+def last_hint(w):
+    url = 'https://suggest.yandex.ru/suggest-ya.cgi?callback=jQuery21401326681859008716_1475524354747&srv=morda_ru_desktop&wiz=TrWth&lr=213&uil=ru&fact=1&v=4&icon=1&hl=1&html=1&bemjson=1&yu=163535871426783267&pos=4&part=' + quote(w)
+    page = request.urlopen(url).read().decode('utf-8')
+    all_hints = re.findall('"bemjson","(.*?)"', page)
+    return all_hints
+
+
 def guessing(w, h, score_computer, hi):
+    last_hints = last_hint(w)
     numbers = ['Первая', 'Вторая', 'Третья']
     print(numbers[score_computer] + ' подсказка:', h[-3+hi][0])
     answer = input()
@@ -79,10 +89,15 @@ def guessing(w, h, score_computer, hi):
             print('\nТы не угадал!')
             guessing(w, h, score_computer, hi+score_computer)
         else:
-            print('Ты проиграл!')
-            print('Это было слово "' + w + '"')
-            #print('\nВнимание! Это твоя последняя попытка!')
-            #print('Подсказка:')
+            print('\nВнимание! Это твоя последняя попытка!')
+            print('Подсказка: ' + random.choice(last_hints))
+            answer = input()
+            if answer == word:
+                print('\nТы угадал!')
+                print('Игра окончена.')
+            else:
+                print('Ты проиграл!')
+                print('Это было слово "' + w + '"')
 
 
 source_file = 'sirena.txt'
@@ -99,10 +114,10 @@ words_to_guess = freq_dict[l_ind-1:r_ind+1]
 sw = set(stopwords.words('russian'))
 sw.update(['таких', 'также', 'это', '—'])
 words_to_guess = [w for w in words_to_guess if w[0] not in sw and w[0] and len(w[0]) > 3]
-print(words_to_guess)
+#print(words_to_guess)
 
 word = random.choice(words_to_guess)[0]
-print('Слово для отгадывания -', word)
+#print('Слово для отгадывания -', word)
 
 text = open_file(source_file)
 text = re.sub('[.,?!:;()"-%#-/]', '', text)
